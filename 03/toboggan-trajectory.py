@@ -1,13 +1,17 @@
 if __name__ == '__main__':
-    trees = 0
-    x = 0
-
     with open('input', 'r') as geology:
-        next(geology)  # skip line 1
-        for line in geology:
-            line = line.strip()
-            x = (x + 3) % len(line)
-            if line[x] == '#':
-                trees += 1
+        geology = [line.strip() for line in geology]
 
-    print(trees)
+    product = 1
+    for dx, dy in [(1, 1), (3, 1), (5, 1), (7, 1), (1, 2)]:
+        x = y = trees = 0
+        while y < len(geology):
+            if geology[y][x] == '#':
+                trees += 1
+            x = (x + dx) % len(geology[0])
+            y += dy
+
+        print(f'Right {dx}, down {dy}: {trees}')
+        product *= trees
+
+    print(f'Product: {product}')
