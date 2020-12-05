@@ -13,6 +13,14 @@ def to_seat_id(boarding_pass):
 
 if __name__ == '__main__':
     with open('input', 'r') as passes:
-        highest = max(to_seat_id(boarding_pass.strip()) for boarding_pass in passes)
+        passes = sorted(to_seat_id(boarding_pass.strip()) for boarding_pass in passes)
+
+    highest = max(passes)
+
+    missing = None
+    for idx in range(len(passes) - 1):
+        if passes[idx] + 2 == passes[idx + 1]:
+            missing = passes[idx] + 1
 
     print(f'Highest seat ID: {highest}')
+    print(f'Missing seat ID: {missing}')
