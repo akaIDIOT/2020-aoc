@@ -16,7 +16,7 @@ def num_bags(forward, color):
         return 0
 
     inners = forward.get(color)
-    return sum(inners.values()) + sum((num * num_bags(forward, inner)) for inner, num in inners.items())
+    return sum(inners.values()) + sum(num * num_bags(forward, inner) for inner, num in inners.items())
 
 
 if __name__ == '__main__':
