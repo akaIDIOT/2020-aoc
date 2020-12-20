@@ -1,82 +1,71 @@
-from itertools import product
+def get_adjacent(seats, x, y, width, height):
+    adjacent = []
 
-
-def parse_input(content):
-    translations = {
-        '.': 0,
-        'L': False,
-        '#': True,
-    }
-    return [[translations[seat] for seat in line.strip()] for line in content.splitlines()]
-
-
-def select_adjacent(seats, x, y):
     if y > 0:
-        # row above
-        yield from seats[y - 1][max(x - 1, 0):min(x + 1, len(seats[0])) + 1]
+        # row above (x, y)
+        adjacent.append(seats[y - 1][max(0, x - 1):min(x + 1, width) + 1])
 
     if x > 0:
-        # seat on the left
-        yield seats[y][x - 1]
-    if x < len(seats[0]) - 1:
-        # seat on the right
-        yield seats[y][x + 1]
+        # seat to the left
+        adjacent.append(seats[y][x - 1])
+    if x < width - 1:
+        # seat to the right
+        adjacent.append(seats[y][x + 1])
 
-    if y < len(seats[0]) - 1:
-        # row below
-        yield from seats[y + 1][max(x - 1, 0):min(x + 1, len(seats[0])) + 1]
+    if y < height - 1:
+        # row below (x, y)
+        adjacent.append(seats[y + 1][max(0, x - 1):min(x + 1, width) + 1])
 
-
-def state(seats, x, y):
-    current_state = seats[y][x]
-    if current_state is not False and seats[y][x] == 0:
-        # an empty spot stays an empty spot
-        return 0
-
-    num_adjacent_occupied = sum(select_adjacent(seats, x, y))
-    if not current_state and num_adjacent_occupied == 0:
-        # currently empty, no occupied seats surrounding it
-        return True
-    if current_state and num_adjacent_occupied >= 4:
-        # currently occupied, too busy
-        return False
-
-    return current_state
+    return ''.join(adjacent)
 
 
-def num_occupied(seats):
-    return sum(map(sum, seats))
+def determine_seat(seats, x, y, width, height):
+    if seats[y][x] == '.':
+        # empty places remain empty
+        return '.'
+
+    adjacent = get_adjacent(seats, x, y, width, height)
+    if seats[y][x] == 'L' and adjacent.count('#') == 0:
+        # empty surrounded by empty -> occupied
+        return '#'
+    if seats[y][x] == '#' and adjacent.count('#') >= 4:
+        # occupied surrounded by 4 or more occupied -> empty
+        return 'L'
+
+    # no change
+    return seats[y][x]
 
 
-def render(seats):
-    def translate(seat):
-        if seat is False:
-            return 'L'
-        if seat is True:
-            return '#'
-        if seat == 0:
-            return '.'
+def step(seats):
+    width = len(seats[0])
+    height = len(seats)
 
-    for row in seats:
-        print(''.join(translate(seat) for seat in row))
+    new_seats = []
+    num_changed = 0
+    for y, row in enumerate(seats):
+        new_row = []
+        for x, seat in enumerate(row):
+            new_seat = determine_seat(seats, x, y, width, height)
+            num_changed += seat != new_seat
+            new_row.append(new_seat)
 
-
-def apply_rules(seats):
-    new_seats = [[state(seats, x, y) for x in range(len(seats[0]))] for y in range(len(seats))]
-    num_changed = sum(seats[y][x] is not new_seats[y][x]
-                      for y, x in product(range(len(seats)), range(len(seats[0]))))
+        new_seats.append(''.join(new_row))
 
     return new_seats, num_changed
 
 
+def num_occupied(seats):
+    return sum(row.count('#') for row in seats)
+
+
 if __name__ == '__main__':
     with open('input', 'r') as seats:
-        seats = parse_input(seats.read())
+        seats = [line.strip() for line in seats.readlines()]
 
-    num_changed = True
     iterations = 0
-    while num_changed:
-        seats, num_changed = apply_rules(seats)
+    num_changed = 1
+    while num_changed > 0:
+        seats, num_changed = step(seats)
         iterations += 1
 
     print(f'The dust settles after {iterations} iterations, {num_occupied(seats)} seats are occupied')
